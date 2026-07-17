@@ -1,1 +1,56 @@
-
+     QUESSTION-1
+1) a) Operating system can control and coordinates use of hardware among various application and user.To access multiple students to execute program can use 
+multi-user operating system.
+b) process management and memory management
+c) START
+Create a child process using fork()
+IF fork() returns 0 THEN
+    Display "Child Process ID = ", getpid()
+ELSE
+    Display "Parent Process ID = ", getpid()
+    Display "Child Process Created"
+END IF
+STOP
+       QUESTION-2
+2) a) open(),write(),Read(),close()
+b) write()- Writing data iinto the file
+    Read()-Reading the data from the file
+c) START
+   Create file "student.txt"
+   Write "Hello" into the file
+   Close the file
+   STOP
+       QUESTION-3
+3) a) open(),creat(),read(),write(),close() are system calls 
+b) Read()-Reads data from source file to data
+   write()- Writes the data read from the source file into the destination file.
+c) Open source file in read mode
+  Open destination file in write mode
+  WHILE read(data) > 0
+      write(data)
+  END WHILE
+  Close source file
+  Close destination file
+  STOP  
+          QUESTION-4
+4) a) fork()-To create the new process from an existing process.Like creating a new child process from an parent process
+      exec()-It is used to run a new program inside the current process and it replaces the current program with the new program.
+   b) wait()-Makes the parent process wait until the child process finishes execution,it is used by the parent process.
+   c) START
+      Create child process using fork()
+      IF child process THEN
+           Execute another program using exec()
+      ELSE
+           Wait for child process to finish using wait()
+      END IF
+      STOP
+           QUESTION-5
+5) a) File management is important because it helps the operating system store, organize, retrieve, and protect files on secondary memory and
+It ensures that users can easily access their data.
+b) open() – Used to open a file for reading or writing operations.
+   close() – Used to close the opened file after completing the operations. 
+c) START
+   Open the file using open()
+   Read the file contents using read()
+   Close the file using close()
+   STOP
