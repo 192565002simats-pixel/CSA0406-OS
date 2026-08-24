@@ -1,0 +1,304 @@
+NAME:RITHIKA P
+REG NO:192565002
+COURSE NAME:OPERATING SYSTEMS
+COURSE CODE:CSA0406
+
+1)The server has 50 GB storage for:
+System files
+System logs
+User files
+Application data
+
+The main requirements are:
+Logs should not exceed 10 GB.
+Critical services should not stop because of low disk space.
+Storage should be used efficiently.
+
+Storage Allocation:
+Partition	Size	Purpose
+/	10 GB	Linux system files
+/var/log	8 GB	System and application logs
+/home	12 GB	User files
+/opt	8 GB	Application data
+/tmp	2 GB	Temporary files
+Swap	4 GB	Memory support
+Free space	6 GB	Emergency use
+Total	50 GB	
+Calculation
+10 + 8 + 12 + 8 + 2 + 4 + 6 = 50 GB
+The log partition is 8 GB, so it is safely below the 10 GB limit.
+
+This Layout is Suitable:
+/var/log is separated, so logs cannot fill the entire system.
+Log size is limited to 8 GB.
+6 GB free space is kept for emergencies.
+Logrotate prevents uncontrolled log growth.
+Separate partitions protect critical system files.
+LVM can be used later if more space is required.
+
+CODE:
+#!/bin/bash
+LOG_SIZE=$(du -s /var/log | awk '{print $1}')
+LIMIT=8388608     # 8 GB in KB
+if [ $LOG_SIZE -ge $LIMIT ]; then
+    echo "Warning: Log storage is reaching the limit!"
+    logrotate -f /etc/logrotate.conf
+    echo "Log rotation completed."
+else
+    echo "Log storage is within the limit."
+fi
+df -h
+
+2) CODE:
+sudo chrt -f 50 ./realtime_program(#Run program with real-time priority)
+sudo taskset -c 0 ./realtime_program(# Assign program to CPU 0)
+vmstat 1(# Monitor system performance)
+
+The Linux system is handling high CPU workloads and is experiencing frequent context switching delays.
+Since hardware upgrades are not possible, the system must be improved using kernel-level techniques.
+The main goals are:
+Reduce unnecessary context switching.
+Improve CPU utilization.
+Give priority to real-time processes.
+Maintain smooth system Performance
+
+Kernel Modules:
+Kernel modules add required functionality to the Linux kernel without rebuilding the entire kernel.
+A module can be loaded using:
+sudo modprobe module_name
+Only necessary modules should be used to avoid unnecessary kernel overhead.
+
+Technique           	Main Benefit
+Scheduler tuning	    -Gives important tasks higher priority
+chrt	                -Supports real-time scheduling
+CPU affinity          -	Reduces unnecessary CPU movement
+Kernel modules	      -Adds only required kernel functionality
+vmstat	              -Monitors context switching and CPU usage
+
+Since hardware upgrades are not possible, kernel-level optimization is an effective solution. Scheduler tuning and real-time priorities help important
+processes get CPU time quickly. CPU affinity reduces unnecessary process movement, while kernel modules provide required functionality efficiently.
+
+Therefore, using chrt, taskset, renice, and vmstat can reduce scheduling overhead and improve the performance of the Linux system for real-time workloads
+
+3) CODE:
+#!/bin/bash
+
+LOGFILE="access.log"
+OUTPUT="report.txt"
+
+echo "Processing log file..."
+
+time awk '
+BEGIN {
+    total=0
+    info=0
+    warning=0
+    error=0
+}
+{
+    total++
+
+    if ($3 == "INFO")
+        info++
+    else if ($3 == "WARNING")
+        warning++
+    else if ($3 == "ERROR")
+        error++
+}
+END {
+    print "===== LOG REPORT ====="
+    print "Total Entries :", total
+    print "INFO Entries  :", info
+    print "WARNING      :", warning
+    print "ERROR Entries :", error
+}' "$LOGFILE" > "$OUTPUT"
+
+echo "Processing completed."
+echo "Report saved in $OUTPUT"
+
+. Problem Analysis:
+The administrator needs to process 1 million log entries per day and the script must finish within 2 minutes (120 seconds).
+Required processing rate:
+120
+1,000,000
+≈8,334 entries/second
+
+Therefore, the solution should:
+Avoid processing each line using a shell loop.
+Avoid unnecessary external commands.
+Use Linux utilities that process data in bulk.
+Minimize disk I/O and repeated file reading.
+Use awk, grep, sort, and cut efficiently.
+
+2. Recommended Commands
+Command            	Purpose	                         Performance Advantage
+awk	             -Filter and extract fields	        Processes millions of lines in one pass
+grep	           -Search patterns	                  Highly optimized text searching
+sort	           -Sort required data	              Efficient system utility with optimized algorithms
+cut              -Extract columns                   Simple and fast field extraction
+wc	             -Count entries	                    Very lightweight
+tee              -Save and display results	        Avoids running the processing twice
+
+Conclusion:
+For processing 1 million log entries within 2 minutes, the best shell-based approach is to use bulk-processing commands, especially awkand grep, 
+rather than shell loops. The proposed solution minimizes file reads, reduces external command execution, and processes multiple operations in a 
+single pass. Performance can be verified using time ./script.sh; if the measured execution time is below 120 seconds, the requirement is satisfied.
+
+4)
+Process Management Strategy – Linux
+
+A faulty process consuming 90% of CPU resources can slow down the entire Linux system. Since restarting the system is not allowed, the administrator
+can identify, monitor, and control the process using Linux process-management commands.
+CODE:
+#!/bin/bash
+echo "======================================"
+echo "     LINUX PROCESS MANAGEMENT"
+echo "======================================"
+echo ""
+echo "1. Checking CPU-intensive processes..."
+ps aux --sort=-%cpu | head -6
+
+echo ""
+read -p "Enter the PID of the faulty process: " PID
+
+# Check whether the process exists
+if ps -p "$PID" > /dev/null
+then
+    echo ""
+    echo "2. Process identified successfully."
+
+    echo "Process Details:"
+    ps -p "$PID" -o PID,USER,COMM,%CPU,%MEM,STAT
+
+    echo ""
+    echo "3. Monitoring CPU usage..."
+    sleep 2
+    ps -p "$PID" -o PID,COMM,%CPU,%MEM
+
+    echo ""
+    echo "4. Reducing CPU priority..."
+
+    sudo renice +10 -p "$PID"
+
+    echo ""
+    echo "5. Updated process information:"
+    ps -p "$PID" -o PID,COMM,%CPU,%MEM,NI,STAT
+
+    echo ""
+    echo "The faulty process has been given lower CPU priority."
+    echo "Critical services can now receive more CPU resources."
+
+    echo ""
+    read -p "Do you want to terminate the process? (y/n): " CHOICE
+
+    if [ "$CHOICE" = "y" ]
+    then
+        sudo kill "$PID"
+        echo "Process $PID terminated safely."
+    else
+        echo "Process continues with reduced priority."
+    fi
+
+else
+    echo ""
+    echo "Process with PID $PID was not found."
+fi
+
+echo ""
+echo "======================================"
+echo "Process management completed."
+echo "======================================"
+
+ps aux --sort=-%cpu     – Finds processes using the highest CPU.
+ps -p PID               – Checks whether the selected process is running.
+sleep                   – Provides a short interval for monitoring.
+renice +10              – Reduces the CPU priority of the faulty process.
+kill PID                – Terminates the process without restarting the system.
+if condition            – Prevents commands from being executed if the process does not exist.
+
+Conclusion:
+This strategy safely manages a faulty high-CPU process without rebooting the Linux system. ps identifies the process, renice reduces its CPU priority,
+and kill provides a final option if the process continues causing problems. This helps maintain the performance of critical services.
+
+5)
+CODE:
+#!/bin/bash
+TOTAL=16
+HOST=4
+VM=2
+VMS=5
+USED=$((HOST + VM * VMS))
+FREE=$((TOTAL - USED))
+echo "Total RAM: $TOTAL GB"
+echo "Host OS: $HOST GB"
+echo "VM1: $VM GB"
+echo "VM2: $VM GB"
+echo "VM3: $VM GB"
+echo "VM4: $VM GB"
+echo "VM5: $VM GB"
+echo "Used RAM: $USED GB"
+echo "Reserve RAM: $FREE GB"
+if [ $FREE -ge 0 ]; then
+    echo "Allocation Successful"
+else
+    echo "Insufficient RAM"
+fi
+
+OUTPUT:
+Total RAM: 16 GB
+Host OS: 4 GB
+VM1: 2 GB
+VM2: 2 GB
+VM3: 2 GB
+VM4: 2 GB
+VM5: 2 GB
+Used RAM: 14 GB
+Reserve RAM: 2 GB
+Allocation Successful
+
+TOTAL=16 → Total physical RAM is 16 GB.
+HOST=4 → 4 GB is reserved for the host OS.
+VM=2 → Each VM receives the minimum 2 GB.
+COUNT=5 → There are 5 virtual machines.
+VM_TOTAL → Calculates total RAM allocated to all VMs.
+USED → Calculates total RAM used by the host and VMs.
+RESERVE → Calculates remaining RAM for temporary workloads.
+
+Host OS       = 4 GB
+5 VMs × 2 GB  = 10 GB
+-----------------------
+Used          = 14 GB
+
+Total RAM     = 16 GB
+Reserve       = 2 GB
+
+Problem Analysis
+The physical server has 16 GB RAM.
+Host Operating System = 4 GB
+Total RAM required by 5 VMs at minimum:
+5×2=10 GB
+
+Total required:
+4+10=14 GB
+Available RAM = 16 GB
+Therefore, after allocating the minimum required memory:
+16−14=2 GB
+
+There is 2 GB RAM available as a buffer.
+
+Proposed Allocation
+Component	     RAM
+Host OS	       4 GB
+VM1	           2 GB
+VM2	           2 GB
+VM3	           2 GB
+VM4	           2 GB
+VM5          	 2 GB
+Unused/ReservE	2 GB
+Total	16 GB
+
+Result:
+
+The allocation is successful because the required 14 GB is less than the available 16 GB. The remaining 2 GB can be kept as reserve memory for temporary
+workload increases, helping all VMs operate smoothly without affecting the host OS.
+
