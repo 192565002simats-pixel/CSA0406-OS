@@ -1,0 +1,89 @@
+NAME: RITHIKA P
+REG NO: 192565002
+COURSE NAME: OPERATING SYSTEMS
+COURSE CODE:CSA0406
+
+1) 
+BEGIN
+SET threshold = 80%
+usage = GET_DISK_USAGE()
+IF usage > threshold THEN
+    log_files = FIND_LOG_FILES()
+    SORT log_files BY age DESCENDING
+    FOR each file IN log_files DO
+        IF file IS older_than_retention_period THEN
+            COMPRESS file
+        ELSE
+            ROTATE file
+        ENDIF
+        usage = GET_DISK_USAGE()
+        IF usage <= threshold THEN
+            BREAK
+        ENDIF
+    ENDFOR
+ENDIF
+END
+
+2)
+BEGIN
+INPUT process_list
+SORT process_list BY priority (highest first)
+WHILE process_list IS NOT EMPTY DO
+    SELECT process WITH highest priority
+    ALLOCATE CPU TIME
+    EXECUTE process
+    IF process IS COMPLETED THEN
+        REMOVE process
+    ELSE
+        REDUCE priority slightly
+        ADD process BACK TO process_list
+    ENDIF
+    RE-SORT process_list BY priority
+ENDWHILE
+END
+
+3)
+BEGIN
+total_RAM = 16 GB
+host_reserved = 4 GB
+available_RAM = total_RAM - host_reserved
+INPUT number_of_VMs
+min_RAM = 2 GB
+FOR i = 1 TO number_of_VMs DO
+    IF available_RAM >= min_RAM THEN
+        ALLOCATE min_RAM TO VM[i]
+        available_RAM = available_RAM - min_RAM
+        PRINT "2 GB allocated to VM", i
+    ELSE
+        PRINT "Insufficient memory for VM", i
+    ENDIF
+END FOR
+PRINT "Remaining RAM =", available_RAM
+END
+
+4)
+BEGIN
+INPUT performance_required
+INPUT budget
+INPUT hardware_access
+IF performance_required = HIGH AND hardware_access = TRUE THEN
+    SELECT Type_1_Hypervisor
+ELSE IF budget = LOW THEN
+    SELECT Type_2_Hypervisor
+ELSE
+    SELECT Type_1_Hypervisor
+ENDIF
+PRINT selected_hypervisor
+END
+
+5)
+BEGIN
+INPUT application_list
+FOR each app IN application_list DO
+    CREATE cgroup FOR app
+    SET CPU limit FOR app
+    SET memory limit FOR app
+    ASSIGN process TO cgroup
+END FOR
+MONITOR CPU AND MEMORY USAGE
+END
